@@ -26,7 +26,6 @@ export default function ChatPage() {
     summarizeChat,
     loading,
   } = useChatContext();
-
   /**
    * WHAT: Handles incoming real-time messages from socket
    * INPUT: message - Message object received from socket server
@@ -52,7 +51,8 @@ export default function ChatPage() {
     if (user) {
       fetchMessages();
     }
-  }, [user, fetchMessages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function ChatPage() {
                   </p>
                 </div>
               </div>
-            ) : messages.length === 0 ? (
+            ) : !Array.isArray(messages) || messages.length === 0 ? (
               // Empty State
               <div className="flex items-center justify-center h-full">
                 <div className="text-center max-w-md">
@@ -199,7 +199,7 @@ export default function ChatPage() {
             ) : (
               // Messages List
               <>
-                {messages.map((message, index) => (
+                {Array.isArray(messages) && messages.map((message, index) => (
                   <ChatBubble
                     key={`${message.username}-${message.created_at}-${index}`}
                     message={message}
