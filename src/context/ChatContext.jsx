@@ -58,9 +58,11 @@ export const ChatProvider = ({ children }) => {
     setLoading(true);
     try {
       const data = await apiFetchMessages();
-      setMessages(data);
+      // Ensure messages is always an array
+      setMessages(Array.isArray(data) ? data : data?.messages || []);
     } catch (error) {
       console.error("Failed to fetch messages:", error);
+      setMessages([]); // Reset to empty array on error
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -114,7 +116,7 @@ export const ChatProvider = ({ children }) => {
    * OUTPUT: Shows loading modal, then displays AI summary or error
    */
   const summarizeChat = useCallback(async () => {
-    if (messages.length === 0) {
+    if (!Array.isArray(messages) || messages.length === 0) {
       Swal.fire({
         icon: "info",
         title: "No Messages",
@@ -140,16 +142,32 @@ export const ChatProvider = ({ children }) => {
       Swal.fire({
         icon: "success",
         title: "Chat Summary",
-        html: `<div class="text-left"><p>${response.summary || "No summary available."}</p></div>`,
+        html: `<div class="text-left"><p>${response.summary || response.data?.summary || "No summary available."}</p></div>`,
         confirmButtonText: "Close",
         width: "600px",
       });
     } catch (error) {
       console.error("Failed to summarize chat:", error);
+      
+      // Determine error message
+      let errorMessage = "Failed to generate summary. Please try again.";
+      
+      if (error.response) {
+        // Server responded with error
+        if (error.response.status === 500) {
+          errorMessage = "Server error occurred. Please check if the AI service is configured correctly.";
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.request) {
+        // Request made but no response
+        errorMessage = "Cannot connect to server. Please check your connection.";
+      }
+      
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to generate summary. Please try again.",
+        text: errorMessage,
       });
     }
   }, [messages]);
