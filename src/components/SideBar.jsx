@@ -12,7 +12,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   // Get user and messages from Context
-  const { user, messages } = useChatContext();
+  const { user, messages, setUser } = useChatContext();
 
   /**
    * WHAT: Extracts unique users from all messages
@@ -23,9 +23,10 @@ export default function Sidebar() {
     const usersMap = new Map();
 
     messages.forEach((message) => {
-      if (!usersMap.has(message.username)) {
-        usersMap.set(message.username, {
-          username: message.username,
+      const username = message.User?.username || message.username;
+      if (username && !usersMap.has(username)) {
+        usersMap.set(username, {
+          username: username,
         });
       }
     });
@@ -54,6 +55,7 @@ export default function Sidebar() {
       confirmButtonColor: "#ef4444",
     }).then((result) => {
       if (result.isConfirmed) {
+        setUser(null);
         navigate("/");
       }
     });

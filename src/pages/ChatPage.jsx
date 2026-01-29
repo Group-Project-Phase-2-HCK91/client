@@ -69,9 +69,9 @@ export default function ChatPage() {
   };
 
   /**
-   * WHAT: Sends a new message through socket and updates local state
+   * WHAT: Sends a new message through socket
    * INPUT: content - Message text, imageUrl - Optional image URL
-   * OUTPUT: Emits message via socket and optimistically updates UI
+   * OUTPUT: Emits message via socket to server
    */
   const handleSendMessage = (content, imageUrl) => {
     const messageData = sendMessage(content, imageUrl);
@@ -79,9 +79,6 @@ export default function ChatPage() {
     if (messageData) {
       // Send message through socket to server
       socketSendMessage(messageData);
-
-      // Optimistically add message to local state for instant feedback
-      addMessage(messageData);
     }
   };
 
@@ -100,7 +97,7 @@ export default function ChatPage() {
       <div className="h-screen flex flex-col bg-gray-50">
         <Navbar onSummarize={handleSummarize} />
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
+          <Sidebar key={user.id} />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <div
@@ -199,13 +196,17 @@ export default function ChatPage() {
             ) : (
               // Messages List
               <>
-                {messages.map((message, index) => (
-                  <ChatBubble
-                    key={`${message.username}-${message.created_at}-${index}`}
-                    message={message}
-                    isCurrentUser={message.username === user.username}
-                  />
-                ))}
+                {messages.map((message, index) => {
+                  const messageUsername =
+                    message.User?.username || message.username;
+                  return (
+                    <ChatBubble
+                      key={message.id}
+                      message={message}
+                      isCurrentUser={messageUsername === user.username}
+                    />
+                  );
+                })}
                 {/* Scroll anchor */}
                 <div ref={messagesEndRef} />
               </>

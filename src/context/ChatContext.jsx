@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import {
   fetchMessages as apiFetchMessages,
   summarizeChat as apiSummarizeChat,
@@ -31,8 +37,12 @@ export const useChatContext = () => {
  * OUTPUT: Provides user, messages, and chat methods to all children
  */
 export const ChatProvider = ({ children }) => {
-  // User state: stores username (avatar is static)
-  const [user, setUserState] = useState(null);
+  // User state: stores username and id
+  const [user, setUserState] = useState(() => {
+    // Restore user from localStorage on initial mount
+    const savedUser = localStorage.getItem("chat-user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
   // Messages state: stores all chat messages
   const [messages, setMessages] = useState([]);
@@ -41,12 +51,17 @@ export const ChatProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
 
   /**
-   * WHAT: Sets user data in global state
-   * INPUT: userData - Object with username (avatar is static)
-   * OUTPUT: Updates user state with provided data
+   * WHAT: Sets user data in global state and localStorage
+   * INPUT: userData - Object with username and id
+   * OUTPUT: Updates user state and saves to localStorage
    */
   const setUser = useCallback((userData) => {
     setUserState(userData);
+    if (userData) {
+      localStorage.setItem("chat-user", JSON.stringify(userData));
+    } else {
+      localStorage.removeItem("chat-user");
+    }
   }, []);
 
   /**
@@ -58,7 +73,7 @@ export const ChatProvider = ({ children }) => {
     setLoading(true);
     try {
       const data = await apiFetchMessages();
-      setMessages(data);
+      setMessages(data.messages);
     } catch (error) {
       console.error("Failed to fetch messages:", error);
       Swal.fire({
@@ -97,6 +112,7 @@ export const ChatProvider = ({ children }) => {
       }
 
       const messageData = {
+        userId: user.id,
         username: user.username,
         content,
         image_url: imageUrl,
@@ -134,7 +150,7 @@ export const ChatProvider = ({ children }) => {
         },
       });
 
-      const response = await apiSummarizeChat(messages);
+      const response = await apiSummarizeChat();
 
       // Show the summary in a modal
       Swal.fire({

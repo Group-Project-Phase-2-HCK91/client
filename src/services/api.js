@@ -22,13 +22,13 @@ export const fetchMessages = async () => {
 };
 
 /**
- * WHAT: Sends chat messages to AI for summarization
- * INPUT: messages - Array of message objects to summarize
+ * WHAT: Requests AI summarization of chat history from server
+ * INPUT: None (server fetches messages from database)
  * OUTPUT: Returns AI-generated summary object or throws error
  */
-export const summarizeChat = async (messages) => {
+export const summarizeChat = async () => {
   try {
-    const response = await api.post("/ai/summarize", { messages });
+    const response = await api.post("/ai/summarize");
     return response.data;
   } catch (error) {
     console.error("Error summarizing chat:", error);

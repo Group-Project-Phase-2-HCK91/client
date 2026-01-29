@@ -8,7 +8,10 @@ import userIcon from "../assets/user-icon.png";
  * OUTPUT: Renders message bubble with avatar, username, content, optional image, and timestamp
  */
 export default function ChatBubble({ message, isCurrentUser }) {
-  const { username, content, image_url, created_at } = message;
+  const username = message.User?.username || message.username;
+  const content = message.content;
+  const image_url = message.imgUrl || message.image_url;
+  const created_at = message.createdAt || message.created_at;
 
   /**
    * WHAT: Formats ISO timestamp to readable time

@@ -23,13 +23,13 @@ export default function ChatInput({ onSendMessage }) {
       const formData = new FormData();
       formData.append("image", file);
 
-      const response = await serverApi.post("/upload-image", formData, {
+      const response = await serverApi.post("/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      return response.data.imageUrl;
+      return response.data.imgUrl;
     } catch (error) {
       console.error("Error uploading image:", error);
       Swal.fire({

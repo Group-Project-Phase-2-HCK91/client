@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useChatContext } from "../context/ChatContext";
 import Swal from "sweetalert2";
@@ -11,18 +11,25 @@ import Swal from "sweetalert2";
 export default function LandingPage() {
   const navigate = useNavigate();
 
-  // Get setUser method from Context to store user data
-  const { setUser } = useChatContext();
+  // Get user and setUser method from Context
+  const { user, setUser } = useChatContext();
 
   // Local form state
   const [username, setUsername] = useState("");
 
+  // Redirect to chat if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/chat");
+    }
+  }, [user, navigate]);
+
   /**
    * WHAT: Handles form submission to join the chat
    * INPUT: e - Form submit event
-   * OUTPUT: Validates input, saves user to context, shows success message, navigates to chat
+   * OUTPUT: Validates input, creates user in database, saves to context, navigates to chat
    */
-  const handleJoinChat = (e) => {
+  const handleJoinChat = async (e) => {
     e.preventDefault();
 
     // Validate username is not empty
@@ -35,25 +42,40 @@ export default function LandingPage() {
       return;
     }
 
-    // Prepare user data object (avatar is static, no need to store)
-    const userData = {
-      username: username.trim(),
-    };
+    try {
+      // Create or get user from database
+      const response = await fetch("http://localhost:3000/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim() }),
+      });
 
-    // Save user data to global context
-    setUser(userData);
+      if (!response.ok) throw new Error("Failed to create user");
 
-    // Show success message
-    Swal.fire({
-      icon: "success",
-      title: "Welcome!",
-      text: `Welcome to the chat, ${userData.username}!`,
-      timer: 1500,
-      showConfirmButton: false,
-    });
+      const user = await response.json();
 
-    // Navigate to chat page
-    navigate("/chat");
+      // Save user data to global context with userId
+      setUser(user);
+
+      // Show success message
+      Swal.fire({
+        icon: "success",
+        title: "Welcome!",
+        text: `Welcome to the chat, ${user.username}!`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      // Navigate to chat page
+      navigate("/chat");
+    } catch (error) {
+      console.error("Error creating user:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to join chat. Please try again.",
+      });
+    }
   };
 
   return (
