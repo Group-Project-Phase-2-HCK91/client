@@ -28,10 +28,28 @@ export const fetchMessages = async () => {
  */
 export const summarizeChat = async () => {
   try {
+<<<<<<< HEAD
     const response = await api.post("/ai/summarize");
+=======
+    // Format messages to ensure clean data for AI processing
+    const formattedMessages = messages.map((msg) => ({
+      username: msg.username,
+      content: msg.content,
+      created_at: msg.created_at,
+    }));
+
+    const response = await api.post("/ai/summarize", { 
+      messages: formattedMessages 
+    });
+>>>>>>> 4b3659cad783e1a455841669d25850314a83a68f
     return response.data;
   } catch (error) {
     console.error("Error summarizing chat:", error);
+    // Log more details about the error
+    if (error.response) {
+      console.error("Response data:", error.response.data);
+      console.error("Response status:", error.response.status);
+    }
     throw error;
   }
 };
